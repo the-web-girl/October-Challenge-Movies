@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎃 Catalogue Films d'Horreur - Octobre 2025</title>
+    <meta name="description" content="Catalogue personnel de films d'horreur classés par sous-genre avec sagas triées chronologiquement">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎃 Films d'Horreur - Ma Collection</h1>
+            <p class="subtitle">Catalogue personnel • Classement par sous-genre • Sagas triées chronologiquement</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Barre de recherche et filtres -->
+        <section class="search-panel">
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Rechercher par titre, saga, sous-genre..."
+                    aria-label="Rechercher un film"
+                >
+                <button id="searchBtn" class="btn-primary">🔍 Rechercher</button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="genreFilter">Sous-genre :</label>
+                    <select id="genreFilter">
+                        <option value="">Tous</option>
+                        <option value="slasher">Slasher</option>
+                        <option value="surnaturel">Surnaturel/Possession</option>
+                        <option value="zombies">Zombies</option>
+                        <option value="psychologique">Horreur Psychologique</option>
+                        <option value="gore">Gore</option>
+                        <option value="creature">Créatures</option>
+                        <option value="found-footage">Found Footage</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="sagaFilter">Saga :</label>
+                    <select id="sagaFilter">
+                        <option value="">Toutes</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="seenFilter">Statut :</label>
+                    <select id="seenFilter">
+                        <option value="">Tous</option>
+                        <option value="seen">Vus</option>
+                        <option value="unseen">Non vus</option>
+                    </select>
+                </div>
+
+                <button id="resetFilters" class="btn-secondary">Réinitialiser</button>
+            </div>
+        </section>
+
+        <!-- Bouton d'ajout de film (admin) -->
+        <section class="admin-panel">
+            <button id="addFilmBtn" class="btn-primary">➕ Ajouter un film</button>
+        </section>
+
+        <!-- Zone de chargement -->
+        <div id="loading" class="loading" style="display: none;">
+            <p>Chargement en cours...</p>
+        </div>
+
+        <!-- Liste des films par genre -->
+        <section id="filmsList" class="films-container">
+            <!-- Les films seront injectés ici par JavaScript -->
+        </section>
+    </main>
+
+    <!-- Modal d'ajout de film -->
+    <div id="addFilmModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>➕ Ajouter un film</h2>
+            
+            <form id="addFilmForm">
+                <div class="form-group">
+                    <label for="tmdbSearch">Rechercher sur TMDb :</label>
+                    <input 
+                        type="text" 
+                        id="tmdbSearch" 
+                        placeholder="Entrez le titre du film..."
+                        autocomplete="off"
+                    >
+                    <div id="tmdbResults" class="tmdb-results"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="filmTitle">Titre :</label>
+                    <input type="text" id="filmTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="filmYear">Année :</label>
+                    <input type="number" id="filmYear" min="1895" max="2030">
+                </div>
+
+                <div class="form-group">
+                    <label for="filmGenre">Sous-genre :</label>
+                    <select id="filmGenre" required>
+                        <option value="">Sélectionner...</option>
+                        <option value="slasher">Slasher</option>
+                        <option value="surnaturel">Surnaturel/Possession</option>
+                        <option value="zombies">Zombies</option>
+                        <option value="psychologique">Horreur Psychologique</option>
+                        <option value="gore">Gore</option>
+                        <option value="creature">Créatures</option>
+                        <option value="found-footage">Found Footage</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filmSaga">Saga (optionnel) :</label>
+                    <input type="text" id="filmSaga" placeholder="Ex: Scream">
+                </div>
+
+                <div class="form-group">
+                    <label for="filmSagaOrder">Ordre dans la saga :</label>
+                    <input type="number" id="filmSagaOrder" min="1" placeholder="Laissez vide pour tri automatique">
+                </div>
+
+                <div class="form-group">
+                    <label for="filmReleaseDate">Date de sortie :</label>
+                    <input type="date" id="filmReleaseDate">
+                </div>
+
+                <input type="hidden" id="filmTmdbId">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Ajouter</button>
+                    <button type="button" id="cancelAdd" class="btn-secondary">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast pour notifications -->
+    <div id="toast" class="toast"></div>
+
+    <footer>
+        <div class="container">
+            <p>🎃 Catalogue Films d'Horreur • Données alimentées par <a href="https://www.themoviedb.org/" target="_blank">TMDb API</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
