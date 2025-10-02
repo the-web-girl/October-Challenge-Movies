@@ -31,33 +31,50 @@ function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     
-    searchInput.addEventListener('input', debounce(() => {
-        currentFilters.search = searchInput.value.trim();
-        filterAndDisplayFilms();
-    }, 300));
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            currentFilters.search = searchInput.value.trim();
+            filterAndDisplayFilms();
+        }, 300));
+    }
     
-    searchBtn.addEventListener('click', () => {
-        currentFilters.search = searchInput.value.trim();
-        filterAndDisplayFilms();
-    });
+    if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+            currentFilters.search = searchInput.value.trim();
+            filterAndDisplayFilms();
+        });
+    }
 
     // Filtres
-    document.getElementById('genreFilter').addEventListener('change', (e) => {
-        currentFilters.genre = e.target.value;
-        filterAndDisplayFilms();
-    });
+    const genreFilter = document.getElementById('genreFilter');
+    const sagaFilter = document.getElementById('sagaFilter');
+    const seenFilter = document.getElementById('seenFilter');
+    const resetFiltersBtn = document.getElementById('resetFilters');
 
-    document.getElementById('sagaFilter').addEventListener('change', (e) => {
-        currentFilters.saga = e.target.value;
-        filterAndDisplayFilms();
-    });
+    if (genreFilter) {
+        genreFilter.addEventListener('change', (e) => {
+            currentFilters.genre = e.target.value;
+            filterAndDisplayFilms();
+        });
+    }
 
-    document.getElementById('seenFilter').addEventListener('change', (e) => {
-        currentFilters.seen = e.target.value;
-        filterAndDisplayFilms();
-    });
+    if (sagaFilter) {
+        sagaFilter.addEventListener('change', (e) => {
+            currentFilters.saga = e.target.value;
+            filterAndDisplayFilms();
+        });
+    }
 
-    document.getElementById('resetFilters').addEventListener('click', resetFilters);
+    if (seenFilter) {
+        seenFilter.addEventListener('change', (e) => {
+            currentFilters.seen = e.target.value;
+            filterAndDisplayFilms();
+        });
+    }
+
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', resetFilters);
+    }
 
     // Modal d'ajout
     const addFilmBtn = document.getElementById('addFilmBtn');
@@ -65,27 +82,45 @@ function setupEventListeners() {
     const closeModal = document.querySelector('.close');
     const cancelAdd = document.getElementById('cancelAdd');
     
-    addFilmBtn.addEventListener('click', () => modal.classList.add('show'));
-    closeModal.addEventListener('click', () => modal.classList.remove('show'));
-    cancelAdd.addEventListener('click', () => modal.classList.remove('show'));
+    if (addFilmBtn && modal) {
+        addFilmBtn.addEventListener('click', () => modal.classList.add('show'));
+    }
+    
+    if (closeModal && modal) {
+        closeModal.addEventListener('click', () => modal.classList.remove('show'));
+    }
+    
+    if (cancelAdd && modal) {
+        cancelAdd.addEventListener('click', () => modal.classList.remove('show'));
+    }
     
     window.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('show');
+        if (modal && e.target === modal) {
+            modal.classList.remove('show');
+        }
     });
 
     // Recherche TMDb
     const tmdbSearch = document.getElementById('tmdbSearch');
-    tmdbSearch.addEventListener('input', debounce(() => {
-        const query = tmdbSearch.value.trim();
-        if (query.length >= 3) {
-            searchTMDb(query);
-        } else {
-            document.getElementById('tmdbResults').classList.remove('show');
-        }
-    }, 500));
+    if (tmdbSearch) {
+        tmdbSearch.addEventListener('input', debounce(() => {
+            const query = tmdbSearch.value.trim();
+            if (query.length >= 3) {
+                searchTMDb(query);
+            } else {
+                const resultsDiv = document.getElementById('tmdbResults');
+                if (resultsDiv) {
+                    resultsDiv.classList.remove('show');
+                }
+            }
+        }, 500));
+    }
 
     // Formulaire d'ajout
-    document.getElementById('addFilmForm').addEventListener('submit', handleAddFilm);
+    const addFilmForm = document.getElementById('addFilmForm');
+    if (addFilmForm) {
+        addFilmForm.addEventListener('submit', handleAddFilm);
+    }
 }
 
 // === CHARGEMENT DES DONNÉES ===
@@ -94,6 +129,11 @@ async function loadFilms() {
     
     try {
         const response = await fetch(`${API_BASE_URL}?action=get_films`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
@@ -108,8 +148,11 @@ async function loadFilms() {
     } catch (error) {
         console.error('Erreur de chargement:', error);
         showToast('Erreur de chargement des films', 'error');
-        document.getElementById('filmsList').innerHTML = 
-            '<p style="text-align:center;color:var(--color-danger);">Impossible de charger les films. Vérifiez la connexion à la base de données.</p>';
+        const filmsList = document.getElementById('filmsList');
+        if (filmsList) {
+            filmsList.innerHTML = 
+                '<p style="text-align:center;color:var(--color-danger);">Impossible de charger les films. Vérifiez la connexion à la base de données.</p>';
+        }
     } finally {
         showLoading(false);
     }
@@ -141,9 +184,9 @@ function filterAndDisplayFilms() {
 
     // Filtre par statut vu
     if (currentFilters.seen === 'seen') {
-        filtered = filtered.filter(film => film.seen === 1);
+        filtered = filtered.filter(film => film.seen === 1 || film.seen === '1');
     } else if (currentFilters.seen === 'unseen') {
-        filtered = filtered.filter(film => film.seen === 0);
+        filtered = filtered.filter(film => film.seen === 0 || film.seen === '0' || !film.seen);
     }
 
     displayFilms(filtered);
@@ -151,6 +194,8 @@ function filterAndDisplayFilms() {
 
 function displayFilms(films) {
     const container = document.getElementById('filmsList');
+    
+    if (!container) return;
     
     if (films.length === 0) {
         container.innerHTML = '<p style="text-align:center;color:var(--color-text-dim);padding:3rem;">Aucun film trouvé.</p>';
@@ -224,11 +269,11 @@ function renderGenreFilms(films) {
         const sagaFilms = bySaga[sagaName].sort((a, b) => {
             // Tri par saga_order puis par release_date
             if (a.saga_order && b.saga_order) {
-                return a.saga_order - b.saga_order;
+                return parseInt(a.saga_order) - parseInt(b.saga_order);
             }
             if (a.saga_order) return -1;
             if (b.saga_order) return 1;
-            return new Date(a.release_date) - new Date(b.release_date);
+            return new Date(a.release_date || '1900-01-01') - new Date(b.release_date || '1900-01-01');
         });
 
         html += `
@@ -243,7 +288,7 @@ function renderGenreFilms(films) {
 
     // Afficher les films standalone triés par date
     if (standalone.length > 0) {
-        standalone.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
+        standalone.sort((a, b) => new Date(a.release_date || '1900-01-01') - new Date(b.release_date || '1900-01-01'));
         html += `
             <div class="films-list">
                 ${standalone.map(renderFilmItem).join('')}
@@ -255,8 +300,8 @@ function renderGenreFilms(films) {
 }
 
 function renderFilmItem(film) {
-    const seenClass = film.seen ? 'seen' : '';
-    const checked = film.seen ? 'checked' : '';
+    const seenClass = (film.seen === 1 || film.seen === '1') ? 'seen' : '';
+    const checked = (film.seen === 1 || film.seen === '1') ? 'checked' : '';
     
     return `
         <div class="film-item ${seenClass}" data-film-id="${film.id}">
@@ -311,6 +356,10 @@ async function toggleSeen(filmId, seen) {
             })
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         
         if (data.success) {
@@ -323,12 +372,16 @@ async function toggleSeen(filmId, seen) {
             if (filmItem) {
                 filmItem.classList.toggle('seen', seen === 1);
             }
+            
+            showToast('Statut mis à jour', 'success');
         } else {
-            throw new Error(data.message);
+            throw new Error(data.message || 'Erreur de mise à jour');
         }
     } catch (error) {
         console.error('Erreur toggle seen:', error);
         showToast('Erreur de mise à jour', 'error');
+        // Recharger pour remettre l'état correct
+        await loadFilms();
     }
 }
 
@@ -338,13 +391,17 @@ async function deleteFilm(filmId) {
             method: 'GET'
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         
         if (data.success) {
             showToast('Film supprimé avec succès', 'success');
             await loadFilms();
         } else {
-            throw new Error(data.message);
+            throw new Error(data.message || 'Erreur de suppression');
         }
     } catch (error) {
         console.error('Erreur suppression:', error);
@@ -356,18 +413,28 @@ async function deleteFilm(filmId) {
 async function searchTMDb(query) {
     try {
         const response = await fetch(`${TMDB_SEARCH_ENDPOINT}&query=${encodeURIComponent(query)}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success && data.results) {
             displayTMDbResults(data.results);
+        } else {
+            displayTMDbResults([]);
         }
     } catch (error) {
         console.error('Erreur recherche TMDb:', error);
+        showToast('Erreur de recherche TMDb', 'error');
     }
 }
 
 function displayTMDbResults(results) {
     const container = document.getElementById('tmdbResults');
+    
+    if (!container) return;
     
     if (results.length === 0) {
         container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--color-text-dim);">Aucun résultat</div>';
@@ -376,8 +443,12 @@ function displayTMDbResults(results) {
     }
 
     container.innerHTML = results.map(film => `
-        <div class="tmdb-result-item" data-tmdb-id="${film.id}" data-title="${escapeHtml(film.title)}" data-year="${film.year}" data-date="${film.release_date}">
-            <div class="tmdb-result-title">${escapeHtml(film.title)}</div>
+        <div class="tmdb-result-item" 
+             data-tmdb-id="${film.id || ''}" 
+             data-title="${escapeHtml(film.title || '')}" 
+             data-year="${film.year || ''}" 
+             data-date="${film.release_date || ''}">
+            <div class="tmdb-result-title">${escapeHtml(film.title || 'Sans titre')}</div>
             <div class="tmdb-result-year">${film.year || 'N/A'}</div>
         </div>
     `).join('');
@@ -387,12 +458,19 @@ function displayTMDbResults(results) {
     // Attacher les événements de sélection
     container.querySelectorAll('.tmdb-result-item').forEach(item => {
         item.addEventListener('click', () => {
-            document.getElementById('filmTitle').value = item.dataset.title;
-            document.getElementById('filmYear').value = item.dataset.year;
-            document.getElementById('filmReleaseDate').value = item.dataset.date;
-            document.getElementById('filmTmdbId').value = item.dataset.tmdbId;
+            const titleInput = document.getElementById('filmTitle');
+            const yearInput = document.getElementById('filmYear');
+            const dateInput = document.getElementById('filmReleaseDate');
+            const tmdbIdInput = document.getElementById('filmTmdbId');
+            const searchInput = document.getElementById('tmdbSearch');
+            
+            if (titleInput) titleInput.value = item.dataset.title;
+            if (yearInput) yearInput.value = item.dataset.year;
+            if (dateInput) dateInput.value = item.dataset.date;
+            if (tmdbIdInput) tmdbIdInput.value = item.dataset.tmdbId;
+            
             container.classList.remove('show');
-            document.getElementById('tmdbSearch').value = '';
+            if (searchInput) searchInput.value = '';
         });
     });
 }
@@ -401,37 +479,91 @@ function displayTMDbResults(results) {
 async function handleAddFilm(e) {
     e.preventDefault();
 
+    // Récupération des valeurs
+    const titleInput = document.getElementById('filmTitle');
+    const yearInput = document.getElementById('filmYear');
+    const genreInput = document.getElementById('filmGenre');
+    const sagaInput = document.getElementById('filmSaga');
+    const sagaOrderInput = document.getElementById('filmSagaOrder');
+    const releaseDateInput = document.getElementById('filmReleaseDate');
+    const tmdbIdInput = document.getElementById('filmTmdbId');
+
+    // Validation des champs requis
+    const title = titleInput ? titleInput.value.trim() : '';
+    const genre = genreInput ? genreInput.value : '';
+    
+    if (!title) {
+        showToast('Le titre est requis', 'error');
+        return;
+    }
+    
+    if (!genre) {
+        showToast('Le genre est requis', 'error');
+        return;
+    }
+
+    // Préparation des données - N'envoyer que les champs remplis
     const filmData = {
         action: 'add_film',
-        tmdb_id: document.getElementById('filmTmdbId').value,
-        title: document.getElementById('filmTitle').value,
-        year: document.getElementById('filmYear').value,
-        genre: document.getElementById('filmGenre').value,
-        saga: document.getElementById('filmSaga').value,
-        saga_order: document.getElementById('filmSagaOrder').value,
-        release_date: document.getElementById('filmReleaseDate').value
+        title: title,
+        genre: genre
     };
+
+    // Ajouter les champs optionnels seulement s'ils ont une valeur
+    const year = yearInput ? yearInput.value.trim() : '';
+    if (year) filmData.year = year;
+
+    const saga = sagaInput ? sagaInput.value.trim() : '';
+    if (saga) filmData.saga = saga;
+
+    const sagaOrder = sagaOrderInput ? sagaOrderInput.value.trim() : '';
+    if (sagaOrder) filmData.saga_order = sagaOrder;
+
+    const releaseDate = releaseDateInput ? releaseDateInput.value.trim() : '';
+    if (releaseDate) filmData.release_date = releaseDate;
+
+    const tmdbId = tmdbIdInput ? tmdbIdInput.value.trim() : '';
+    if (tmdbId) filmData.tmdb_id = tmdbId;
+
+    console.log('Envoi des données:', filmData);
 
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(filmData)
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        
+        console.log('Réponse API:', data);
         
         if (data.success) {
             showToast('Film ajouté avec succès', 'success');
-            document.getElementById('addFilmModal').classList.remove('show');
-            document.getElementById('addFilmForm').reset();
+            
+            // Fermer le modal
+            const modal = document.getElementById('addFilmModal');
+            if (modal) modal.classList.remove('show');
+            
+            // Réinitialiser le formulaire
+            const form = document.getElementById('addFilmForm');
+            if (form) form.reset();
+            
+            // Recharger les films
             await loadFilms();
         } else {
-            throw new Error(data.message);
+            throw new Error(data.message || 'Erreur lors de l\'ajout du film');
         }
     } catch (error) {
         console.error('Erreur ajout film:', error);
-        showToast('Erreur d\'ajout du film', 'error');
+        showToast(`Erreur: ${error.message}`, 'error');
     }
 }
 
@@ -454,6 +586,8 @@ function extractSagas(films) {
 
 function populateSagaFilter() {
     const select = document.getElementById('sagaFilter');
+    if (!select) return;
+    
     const currentValue = select.value;
     
     select.innerHTML = '<option value="">Toutes</option>';
@@ -469,19 +603,31 @@ function populateSagaFilter() {
 
 function resetFilters() {
     currentFilters = { search: '', genre: '', saga: '', seen: '' };
-    document.getElementById('searchInput').value = '';
-    document.getElementById('genreFilter').value = '';
-    document.getElementById('sagaFilter').value = '';
-    document.getElementById('seenFilter').value = '';
+    
+    const searchInput = document.getElementById('searchInput');
+    const genreFilter = document.getElementById('genreFilter');
+    const sagaFilter = document.getElementById('sagaFilter');
+    const seenFilter = document.getElementById('seenFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (genreFilter) genreFilter.value = '';
+    if (sagaFilter) sagaFilter.value = '';
+    if (seenFilter) seenFilter.value = '';
+    
     filterAndDisplayFilms();
 }
 
 function showLoading(show) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.style.display = show ? 'block' : 'none';
+    }
 }
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
+    if (!toast) return;
+    
     toast.textContent = message;
     toast.className = `toast ${type} show`;
     
@@ -491,6 +637,7 @@ function showToast(message, type = 'success') {
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;

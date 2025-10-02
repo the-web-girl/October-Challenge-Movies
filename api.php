@@ -17,16 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // === PARAMÈTRES DE CONNEXION BASE DE DONNÉES ===
-// ⚠️ À MODIFIER selon votre configuration IONOS
-define('DB_HOST', 'localhost');        // Souvent 'localhost' chez IONOS
-define('DB_NAME', 'votre_base');       // Nom de votre base MySQL
-define('DB_USER', 'votre_user');       // Utilisateur MySQL
-define('DB_PASS', 'votre_password');   // Mot de passe MySQL
+define('DB_HOST', 'icivotre.hosting-data.io');
+define('DB_NAME', 'votre nom de base de donnée');
+define('DB_USER', 'Votre ID user');
+define('DB_PASS', 'Votre mot de passe de BD');
 define('DB_CHARSET', 'utf8mb4');
 
 // === CLÉ API TMDB ===
-// Obtenir une clé gratuite sur https://www.themoviedb.org/settings/api
-define('TMDB_API_KEY', 'VOTRE_CLE_TMDB_ICI');
+define('TMDB_API_KEY', 'Votre clé API pour movie db');
 define('TMDB_BASE_URL', 'https://api.themoviedb.org/3');
 
 // === CONNEXION À LA BASE DE DONNÉES ===
@@ -51,7 +49,16 @@ function getDB() {
 }
 
 // === ROUTEUR PRINCIPAL ===
+// CORRECTION: Vérifier l'action dans GET, POST ou dans le corps JSON
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+if (empty($action)) {
+    $rawInput = file_get_contents('php://input');
+    if (!empty($rawInput)) {
+        $jsonData = json_decode($rawInput, true);
+        $action = $jsonData['action'] ?? '';
+    }
+}
 
 switch ($action) {
     case 'get_films':
@@ -75,7 +82,7 @@ switch ($action) {
         break;
     
     default:
-        sendError('Action non reconnue', 400);
+        sendError('Action non reconnue: ' . $action, 400);
 }
 
 // === RÉCUPÉRATION DES FILMS ===
@@ -134,13 +141,14 @@ function getFilms() {
 function addFilm() {
     $data = json_decode(file_get_contents('php://input'), true);
     
-    $tmdb_id = $data['tmdb_id'] ?? null;
+    // Validation et nettoyage des données
+    $tmdb_id = isset($data['tmdb_id']) ? trim($data['tmdb_id']) : null;
     $title = trim($data['title'] ?? '');
-    $year = $data['year'] ?? null;
-    $release_date = $data['release_date'] ?? null;
+    $year = isset($data['year']) ? trim($data['year']) : null;
+    $release_date = isset($data['release_date']) ? trim($data['release_date']) : null;
     $genre = trim($data['genre'] ?? '');
     $saga = trim($data['saga'] ?? '');
-    $saga_order = $data['saga_order'] ?? null;
+    $saga_order = isset($data['saga_order']) ? (int)$data['saga_order'] : null;
     
     if (empty($title) || empty($genre)) {
         sendError('Titre et genre obligatoires', 400);
